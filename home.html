@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+  <style>
+    /* Leaflet map container */
+    #map {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1; /* Ensure it's behind other elements */
+    }
+
+    .circular-menu {
+      position: fixed;
+      bottom: 1em;
+      right: 1em;
+      z-index: 2; /* Ensure menu is above the map */
+    }
+
+    .circular-menu .floating-btn {
+        display: block;
+        width: 3.5em;
+        height: 3.5em;
+        border-radius: 50%;
+        background-color: hsl(4, 98%, 60%);
+        box-shadow: 0 2px 5px 0 hsla(0, 0%, 0%, .26);  
+        color: #161616;
+        text-align: center;
+        line-height: 3.9;
+        cursor: pointer;
+        outline: 0;
+    }
+
+    .circular-menu.active .floating-btn {
+      box-shadow: inset 0 0 3px hsla(0, 0%, 0%, .3);
+    }
+
+    .circular-menu .floating-btn:active {
+      box-shadow: 0 4px 8px 0 hsla(0, 0%, 0%, .4);
+    }
+
+    .circular-menu .floating-btn i {
+      font-size: 1.3em;
+      transition: transform .2s;  
+    }
+
+    .circular-menu.active .floating-btn i {
+      transform: rotate(-45deg);
+    }
+
+    .circular-menu:after {
+      display: block;
+      content: ' ';
+      width: 3.5em;
+      height: 3.5em;
+      border-radius: 50%;
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: -2;
+      background-color: hsl(4, 98%, 60%);
+      transition: all .3s ease;
+    }
+
+    .circular-menu.active:after {
+      transform: scale3d(5.5, 5.5, 1);
+      transition-timing-function: cubic-bezier(.68, 1.55, .265, 1);
+    }
+
+    .circular-menu .items-wrapper {
+      padding: 0;
+      margin: 0;
+    }
+
+    .circular-menu .menu-item {
+      position: absolute;
+      top: .2em;
+      right: .2em;
+      z-index: -1;
+      display: block;
+      text-decoration: none;
+      color: hsl(0, 0%, 100%);
+      font-size: 1em;
+      width: 3em;
+      height: 3em;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 3;
+      background-color: hsla(0,0%,0%,.1);
+      transition: transform .3s ease, background .2s ease;
+    }
+
+    .circular-menu .menu-item:hover {
+      background-color: hsla(0,0%,0%,.3);
+    }
+
+    .circular-menu.active .menu-item {
+      transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .circular-menu.active .menu-item:nth-child(1) {
+      transform: translate3d(1em,-7em,0);
+    }
+
+    .circular-menu.active .menu-item:nth-child(2) {
+      transform: translate3d(-3.5em,-6.3em,0);
+    }
+
+    .circular-menu.active .menu-item:nth-child(3) {
+      transform: translate3d(-6.5em,-3.2em,0);
+    }
+
+    .circular-menu.active .menu-item:nth-child(4) {
+      transform: translate3d(-7em,1em,0);
+    }
+
+    .circular-menu.circular-menu-left {
+      right: auto; 
+      left: 1em;
+    }
+
+    .circular-menu.circular-menu-left .floating-btn {
+      background-color: #CFFF5E;
+    }
+
+    .circular-menu.circular-menu-left:after {
+      background-color: #6D4AD0;
+    }
+
+    .circular-menu.circular-menu-left.active .floating-btn i {
+      transform: rotate(90deg);
+    }
+
+    .circular-menu.circular-menu-left.active .menu-item:nth-child(1) {
+      transform: translate3d(-1em,-7em,0);
+    }
+
+    .circular-menu.circular-menu-left.active .menu-item:nth-child(2) {
+      transform: translate3d(3.5em,-6.3em,0);
+    }
+
+    .circular-menu.circular-menu-left.active .menu-item:nth-child(3) {
+      transform: translate3d(6.5em,-3.2em,0);
+    }
+
+    .circular-menu.circular-menu-left.active .menu-item:nth-child(4) {
+      transform: translate3d(7em,1em,0);
+    }
+
+    /* Initially hide the right circular menu */
+    #circularMenu {
+      display: none;
+    }
+
+    /* Container Styles */
+#container {
+  font-family: sans-serif;
+  display: flex;
+  height: 88%;
+  width: 318px;
+  max-width: 319px;
+  padding: 20px;
+  box-sizing: border-box;
+  position: absolute;
+  border-radius: 39px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  z-index: 2; /* Ensure container is above the map */
+  background-color: #6D4AD0;
+  right: 20px;
+  bottom: 25px;
+}
+
+h1 {
+  margin-top: 60px;
+  color: #fff;
+  text-align: center;
+}
+
+p {
+  color: #fff;
+  text-align: justify;
+}
+
+/* Search Button and Input Styles */
+.search {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  height: 50px;
+}
+
+.search .input {
+  background-color: #fff;
+  border: 0;
+  border-radius: 39px;
+  font-size: 18px;
+  padding: 15px;
+  height: 20px;
+  width: 20px;
+  transition: width 0.5s ease-in-out;
+}
+
+.btn {
+  background: #CFFF5E;
+  border: 0;
+  cursor: pointer;
+  font-size: 24px;
+  border-radius: 39px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 50px;
+  width: 50px;
+  transition: transform 0.5s ease-in-out;
+}
+
+.btn:focus,
+.input:focus {
+  outline: none;
+}
+
+.search.active .input {
+  width: 200px;
+}
+
+.search.active .btn {
+  transform: translateX(235px);
+}
+
+/* Search Results Container */
+#results {
+  margin-top: 20px;
+}
+
+/* Modal Styles */
+.modal {
+  font-family: sans-serif;
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 3; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
+}
+
+.modal-content {
+  background-color: #1E1915;
+  padding: 20px;
+  width: 50%;
+  max-width: 400px; /* Could be more or less, depending on screen size */
+  border-radius: 37px;
+  text-align: center;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 64px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content p {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-around;
+}
+
+.modal-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 17px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.modal-buttons .confirm-btn {
+  background-color: #B87EED;
+  color: #161616;
+}
+
+.modal-buttons .cancel-btn {
+  background-color: #CFFF5E;
+  color: black;
+}
+
+/* Ensure modal is above all other elements */
+body .modal {
+  z-index: 1000;
+}
+
+/* Optional: Prevent scrolling when modal is open */
+body.modal-open {
+  overflow: hidden;
+}
+
+
+    /* Media query for mobile portrait view (max-width: 480px) */
+    @media only screen and (max-width: 480px) {
+       #container,
+  .search,
+  h1 {
+    display: none; /* Hide the container, search button, and h1 */
+  }
+
+  #circularMenu {
+      display: block;
+    }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="map"></div> <!-- Add this div for the map -->
+
+  <div id="container">
+    <div id="content">
+      <h1>Student Location Tracking System</h1>
+      <p>Welcome to the student location tracking system. This system allows you to track the location of students in real-time.</p>
+      <p>The map shows the current location of the students who have granted permission for location tracking.</p>
+      <div class="search">
+        <input type="text" class="input" placeholder="Start searching..."/>
+        <button class="btn">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+      <div id="results"></div> <!-- Container for search results -->
+    </div>
+  </div>
+
+  <div id="notification"></div> <!-- Notification div -->
+
+  <!-- First Circular Menu -->
+  <div id="circularMenu" class="circular-menu">
+    <a class="floating-btn" onclick="document.getElementById('circularMenu').classList.toggle('active');">
+      <i class="fa fa-plus"></i>
+    </a>
+    <menu class="items-wrapper">
+      <a href="#" class="menu-item fa fa-facebook"></a>
+      <a href="#" class="menu-item fa fa-twitter"></a>
+      <a href="#" class="menu-item fa fa-google-plus"></a>
+      <a href="#" class="menu-item fa fa-linkedin"></a>
+    </menu>
+  </div>
+
+  <!-- Second Circular Menu -->
+  <div id="circularMenu1" class="circular-menu circular-menu-left active">
+    <a class="floating-btn" onclick="document.getElementById('circularMenu1').classList.toggle('active');">
+      <i class="fa fa-bars"></i>
+    </a>
+    <menu class="items-wrapper">
+      <a href="college.html" class="menu-item fa fa-user"></a>
+      <a href="#" class="menu-item fa fa-bell"></a>
+      <a href="#" class="menu-item fa fa-cog"></a>
+      <a href="#" id="signOutBtn" class="menu-item fa fa-power-off"></a>
+    </menu>
+  </div>
+
+  <!-- Confirmation Modal -->
+<div id="logoutModal" class="modal">
+  <div class="modal-content">
+    <p>Are you sure you want to logout?</p>
+    <div class="modal-buttons">
+      <button class="confirm-btn" id="confirmLogout">Yes</button>
+      <button class="cancel-btn" id="cancelLogout">No</button>
+    </div>
+  </div>
+</div>
+
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+
+    // Modal Functionality for Logout Confirmation
+const signOutBtn = document.getElementById('signOutBtn');
+const logoutModal = document.getElementById('logoutModal');
+const confirmLogout = document.getElementById('confirmLogout');
+const cancelLogout = document.getElementById('cancelLogout');
+
+// Open the modal when Sign Out button is clicked
+signOutBtn.addEventListener('click', (e) => {
+  e.preventDefault(); // Prevent the default link behavior
+  logoutModal.style.display = 'block';
+  document.body.classList.add('modal-open'); // Optional: Prevent background scrolling
+});
+
+// Handle Confirm Logout
+confirmLogout.addEventListener('click', () => {
+  // Redirect to sign-out logic or page
+  // For example, redirect to sign-in page
+  window.location.href = 'signin.html';
+});
+
+// Handle Cancel Logout
+cancelLogout.addEventListener('click', () => {
+  logoutModal.style.display = 'none';
+  document.body.classList.remove('modal-open'); // Re-enable background scrolling
+});
+
+// Close the modal when clicking outside the modal content
+window.addEventListener('click', (event) => {
+  if (event.target == logoutModal) {
+    logoutModal.style.display = 'none';
+    document.body.classList.remove('modal-open');
+  }
+});
+
+      // Initialize the map
+      var map = L.map('map').setView([14.5995, 120.9842], 13); // Coordinates for Manila
+
+      // Set up the tile layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      // Add a marker
+      L.marker([14.5995, 120.9842]).addTo(map)
+          .bindPopup('This is Manila!')
+          .openPopup();
+
+          // Get the search button and input elements
+const search = document.querySelector(".search");
+const btn = document.querySelector(".btn");
+const input = document.querySelector(".input");
+
+// Toggle active class on the search button click and focus on input
+btn.addEventListener("click", () => {
+  search.classList.toggle("active");
+  input.focus();
+});
+
+// Display search results for students
+function displayStudents(students) {
+  const resultsContainer = document.querySelector('#results');
+  resultsContainer.innerHTML = ''; // Clear previous results
+
+  students.forEach(student => {
+    const studentCard = document.createElement('div');
+    studentCard.className = 'student-card';
+    studentCard.textContent = `${student.first_name} ${student.middle_name} ${student.last_name}`;
+    studentCard.addEventListener('click', () => showStudentProfile(student));
+    resultsContainer.appendChild(studentCard);
+  });
+}
+
+// Filter students based on the search query
+function filterStudents(students, searchQuery) {
+  const filteredStudents = students.filter(student =>
+    `${student.first_name} ${student.middle_name} ${student.last_name}`.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  displayStudents(filteredStudents);
+}
+
+// Show detailed profile of the selected student
+function showStudentProfile(student) {
+  const profileContainer = document.createElement('div');
+  profileContainer.className = 'profile-container';
+
+  const profileContent = `
+    <div class="profile-card">
+      <h2>${student.first_name} ${student.middle_name} ${student.last_name}</h2>
+      <p><strong>ID:</strong> ${student.student_id}</p>
+      <p><strong>Email:</strong> ${student.email}</p>
+      <p><strong>Phone:</strong> ${student.phone}</p>
+      <button class="close-btn">Close</button>
+    </div>
+  `;
+  profileContainer.innerHTML = profileContent;
+  document.body.appendChild(profileContainer);
+
+  // Close button to remove profile
+  const closeBtn = profileContainer.querySelector('.close-btn');
+  closeBtn.addEventListener('click', () => document.body.removeChild(profileContainer));
+}
+
+// Fetch student data from the server and initialize search functionality
+window.onload = () => {
+  fetchStudents(); // Fetch students data on page load
+};
+
+function fetchStudents() {
+  fetch('fetch_students.php') // Replace with actual API endpoint
+    .then(response => response.json())
+    .then(data => {
+      const searchInput = document.querySelector('.input');
+      searchInput.addEventListener('input', () => filterStudents(data, searchInput.value)); // Filter students as you type
+      displayStudents(data); // Display initial student list
+    })
+    .catch(error => console.error('Error fetching students:', error));
+}
+
+// Check for emergency notifications
+      const notification = localStorage.getItem('emergencyNotification');
+      if (notification) {
+          document.getElementById('notification').innerText = notification;
+          document.getElementById('notification').style.display = 'block'; // Show notification
+          localStorage.removeItem('emergencyNotification'); // Remove notification after displaying
+      }
+  </script>
+  
+</body>
+</html>

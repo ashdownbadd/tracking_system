@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> <!-- Bootstrap CSS -->
+    <title>Student Search</title>
+    <style>
+        body {
+            padding: 20px;
+            background-image: url('background.svg');
+            background-size: cover;
+        }
+        .table-responsive {
+            margin-top: 20px;
+            max-width: 100%; /* Allows for responsiveness */
+            overflow-x: auto; /* Enables horizontal scrolling on small screens */
+        }
+        .search-container {
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #007bff; /* Bootstrap primary color */
+            margin-bottom: 20px;
+            text-align: center; /* Center the header */
+        }
+        .form-control {
+            border-radius: 20px; /* Rounded corners for input */
+        }
+        .btn-primary {
+            border-radius: 20px; /* Rounded corners for button */
+        }
+        table {
+            background-color: white; /* White background for the table */
+            border-radius: 10px; /* Rounded corners for the table */
+            overflow: hidden; /* To apply rounded corners */
+            width: 100%; /* Full width of the table */
+            font-size: 1.2em; /* Slightly larger text */
+            border: none; /* Remove border */
+        }
+        th {
+            background-color: #6D4AD0; /* Bootstrap primary color for header */
+            color: black; /* White text for header */
+            text-align: center; /* Center text in header */
+        }
+        td {
+            text-align: center; /* Center text in body cells */
+        }
+        tr:hover {
+            background-color: #e9ecef; /* Light grey background on row hover */
+        }
+        .filter-select {
+            margin-top: 5px;
+            width: 100%; /* Full width for the filter select */
+            color: black; /* Change text color to black */
+            background-color: transparent; /* Make the background transparent */
+            border: 1px solid #6D4AD0; /* Optional: Add a border with the same color as the header */
+            text-align: center; /* Center text in the dropdown */
+        }
+        .filter-select option {
+            text-align: center; /* Center the text of the options */
+        }
+        /* Set specific widths for columns */
+        th:nth-child(3), td:nth-child(3) {
+            width: 10%; /* Section column */
+        }
+        th:nth-child(4), td:nth-child(4) {
+            width: 15%; /* Year Level column */
+        }
+        th:nth-child(5), td:nth-child(5) {
+            width: 35%; /* Program column - reduced size */
+        }
+        th:nth-child(1), td:nth-child(1) {
+            width: 15.5%; /* Student ID column */
+        }
+        th:nth-child(2), td:nth-child(2) { /* Full Name column */
+            width: 25%; /* Full Name column */
+        }
+    </style>
+</head>
+<body>
+
+    <h2 class="text-center">Student Search</h2>
+
+    <div class="search-container text-center">
+        <input type="text" id="searchInput" placeholder="Search for students..." class="form-control" style="display: inline-block; width: 300px;">
+        <button id="searchButton" class="btn btn-primary">Search</button>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="studentTable">
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Full Name</th>
+                                <th>
+                                    <select id="filterSection" class="filter-select">
+                                        <option value="">Section</option>
+                                        <option value="A">A</option>
+                                        <option value="B">B</option>
+                                        <option value="C">C</option>
+                                        <option value="D">D</option>
+                                        <option value="E">E</option>
+                                    </select>
+                                </th>
+                                <th>
+                                    <select id="filterYearLevel" class="filter-select">
+                                        <option value="">Year Level</option>
+                                        <option value="1st Year">1st Year</option>
+                                        <option value="2nd Year">2nd Year</option>
+                                        <option value="3rd Year">3rd Year</option>
+                                        <option value="4th Year">4th Year</option>
+                                    </select>
+                                </th>
+                                <th>
+                                    <select id="filterProgram" class="filter-select">
+                                        <option value="">Program</option>
+                                        <option value="Bachelor of Science in Psychology">Bachelor of Science in Psychology</option>
+                                        <option value="Bachelor of Science in Social Work">Bachelor of Science in Social Work</option>
+                                        <option value="Bachelor of Public Administration">Bachelor of Public Administration</option>
+                                        <option value="Bachelor of Science in Business Administration, Major in Marketing Management">Bachelor of Science in Business Administration, Major in Marketing Management</option>
+                                        <option value="Bachelor of Science in Human Resource Development Management">Bachelor of Science in Human Resource Development Management</option>
+                                        <option value="Bachelor of Science in Office Administration">Bachelor of Science in Office Administration</option>
+                                        <option value="Bachelor of Science in Entrepreneurial Management">Bachelor of Science in Entrepreneurial Management</option>
+                                        <option value="Bachelor of Science in Criminology">Bachelor of Science in Criminology</option>
+                                        <option value="Bachelor of Elementary Education">Bachelor of Elementary Education</option>
+                                        <option value="Bachelor of Science in Education, Major in English">Bachelor of Science in Education, Major in English</option>
+                                        <option value="Bachelor of Science in Education, Major in Mathematics">Bachelor of Science in Education, Major in Mathematics</option>
+                                        <option value="Bachelor of Science in Education, Major in Science">Bachelor of Science in Education, Major in Science</option>
+                                        <option value="Bachelor of Science in Hospitality Management">Bachelor of Science in Hospitality Management</option>
+                                        <option value="Bachelor of Science in Tourism Management">Bachelor of Science in Tourism Management</option>
+                                        <option value="Bachelor of Science in Information System">Bachelor of Science in Information System</option>
+                                        <option value="Bachelor of Science in Computer Science">Bachelor of Science in Computer Science</option>
+                                    </select>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Student data will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div><!--end of .table-responsive-->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Load all students on page load
+            loadStudents();
+
+            // Filter functionality for each column (without studentID and fullName)
+            $('.filter-select').on('change', function() {
+                const section = $('#filterSection').val();
+                const yearLevel = $('#filterYearLevel').val();
+                const program = $('#filterProgram').val();
+
+                $.ajax({
+                    url: 'table.php',
+                    type: 'POST',
+                    data: {
+                        section: section,
+                        yearLevel: yearLevel,
+                        program: program
+                    },
+                    success: function(data) {
+                        $('#tableBody').html(data);
+                    }
+                });
+            });
+        });
+
+        function loadStudents() {
+            $.ajax({
+                url: 'table.php', // Your PHP file to fetch all student data
+                type: 'POST',
+                data: {
+                    section: '',
+                    yearLevel: '',
+                    program: ''
+                }, // Empty query to get all students
+                success: function(data) {
+                    $('#tableBody').html(data);
+                }
+            });
+        }
+
+        function populateDropdowns() {
+            $.ajax({
+                url: 'table.php', // Make sure this is the correct path
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    // Populate Section dropdown
+                    const sectionSelect = $('#filterSection');
+                    data.section.forEach(function(section) {
+                        sectionSelect.append(`<option value="${section}">${section}</option>`);
+                    });
+
+                    // Populate Year Level dropdown
+                    const yearLevelSelect = $('#filterYearLevel');
+                    data.yearLevel.forEach(function(year) {
+                        yearLevelSelect.append(`<option value="${year}">${year}</option>`);
+                    });
+
+                    // Populate Program dropdown
+                    const programSelect = $('#filterProgram');
+                    data.program.forEach(function(program) {
+                        programSelect.append(`<option value="${program}">${program}</option>`);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching dropdown data:", error);
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            populateDropdowns(); // Call to populate dropdowns
+        });
+    </script>
+
+</body>
+</html>
